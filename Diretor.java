@@ -1,19 +1,19 @@
 package user;
 
-public class Gerente extends Funcionario{
+public class Diretor extends Funcionario{
 	private int senha;
 
-	public Gerente(double salario) {
+	public Diretor(double salario) {
 		setSalario(salario);
 	}
 
-	public Gerente(int senha) {
+	public Diretor(int senha) {
 		setSenha(senha);
 	}
 
 	@Override
 	public double getBonus() {
-		return getSalario() * 1.5;
+		return getSalario() * 2;
 	}
 
 	@Override
@@ -28,5 +28,4 @@ public class Gerente extends Funcionario{
 	public void setSenha(int senha) {
 		this.senha = senha;
 	}
-
 }
