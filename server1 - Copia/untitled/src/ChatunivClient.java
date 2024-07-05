@@ -41,6 +41,8 @@ public class ChatunivClient {
                 out.println(userInput);
                 if (userInput.equalsIgnoreCase("/logout")) {
                     break;
+                } else if (userInput.equalsIgnoreCase("/list")) {
+                    out.println(userInput);
                 }
             }
         } catch (Exception e) {
