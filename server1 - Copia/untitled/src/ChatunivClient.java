@@ -2,51 +2,65 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class ChatunivClient {
+    private static String serverAddress = "127.0.0.1"; // IP do servidor
+    private static int serverPort = 20041; // Porta do servidor
+
     public static void main(String[] args) {
-        if (args.length != 2) {
-            System.out.println("Usage: java ChatunivClient <server-ip> <username>");
-            return;
-        }
-
-        String serverAddress = args[0];
-        String username = args[1];
-
-        try (Socket socket = new Socket(serverAddress, 20041);
+        try (Socket socket = new Socket(serverAddress, serverPort);
              PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-             BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in))) {
+             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
 
-            // Enviar nome de usuário ao servidor
-            out.println(username);
+            Scanner scanner = new Scanner(System.in);
+            String response;
 
-            // Thread para receber mensagens do servidor
-            new Thread(new Runnable() {
-                public void run() {
-                    try {
-                        String serverMessage;
-                        while ((serverMessage = in.readLine()) != null) {
-                            System.out.println(serverMessage);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
+            // Receber solicitação de nome de usuário do servidor
+            response = in.readLine();
+            if (response.equals("SUBMITNAME")) {
+                System.out.println("Digite seu nome de usuário: ");
+                String username = scanner.nextLine();
+                out.println(username);
+            }
 
-            // Enviar mensagens do cliente ao servidor
-            String userInput;
-            while ((userInput = stdIn.readLine()) != null) {
-                out.println(userInput);
-                if (userInput.equalsIgnoreCase("/logout")) {
-                    break;
-                } else if (userInput.equalsIgnoreCase("/list")) {
-                    out.println(userInput);
+            // Receber confirmação de nome de usuário aceito
+            response = in.readLine();
+            if (response.startsWith("NAMEACCEPTED")) {
+                String username = response.substring(13);
+                System.out.println("Nome de usuário aceito: " + username);
+                System.out.println("Bem-vindo ao chat!");
+
+                // Iniciar uma nova thread para ler mensagens do servidor
+                new Thread(new IncomingMessageReader(in)).start();
+
+                // Ler mensagens do usuário e enviá-las ao servidor
+                while (scanner.hasNextLine()) {
+                    String message = scanner.nextLine();
+                    out.println(message);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static class IncomingMessageReader implements Runnable {
+        private BufferedReader in;
+
+        public IncomingMessageReader(BufferedReader in) {
+            this.in = in;
+        }
+
+        public void run() {
+            try {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    System.out.println(message);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }
